@@ -1,10 +1,10 @@
-use super::{AppSettings, DevChild, ExitReason, Options, RustAppSettings, Target};
+use super::{AppSettings, ExitReason, Options, RustAppSettings, Target};
 use crate::CommandExt;
 
 use anyhow::Context;
 #[cfg(target_os = "linux")]
 use heck::ToKebabCase;
-use shared_child::SharedChild;
+// use shared_child::SharedChild;
 use std::{
   fs::rename,
   io::{BufReader, ErrorKind, Write},
@@ -16,68 +16,68 @@ use std::{
   },
 };
 
-pub fn run_dev<F: Fn(ExitStatus, ExitReason) + Send + Sync + 'static>(
-  options: Options,
-  run_args: Vec<String>,
-  available_targets: &mut Option<Vec<Target>>,
-  config_features: Vec<String>,
-  app_settings: &RustAppSettings,
-  product_name: Option<String>,
-  on_exit: F,
-) -> crate::Result<DevChild> {
-  let bin_path = app_settings.app_binary_path(&options)?;
+// pub fn run_dev<F: Fn(ExitStatus, ExitReason) + Send + Sync + 'static>(
+//   options: Options,
+//   run_args: Vec<String>,
+//   available_targets: &mut Option<Vec<Target>>,
+//   config_features: Vec<String>,
+//   app_settings: &RustAppSettings,
+//   product_name: Option<String>,
+//   on_exit: F,
+// ) -> crate::Result<DevChild> {
+//   let bin_path = app_settings.app_binary_path(&options)?;
 
-  let manually_killed_app = Arc::new(AtomicBool::default());
-  let manually_killed_app_ = manually_killed_app.clone();
-  let app_child = Arc::new(Mutex::new(None));
-  let app_child_ = app_child.clone();
+//   let manually_killed_app = Arc::new(AtomicBool::default());
+//   let manually_killed_app_ = manually_killed_app.clone();
+//   let app_child = Arc::new(Mutex::new(None));
+//   let app_child_ = app_child.clone();
 
-  let build_child = build_dev_app(
-    options,
-    available_targets,
-    config_features,
-    move |status, reason| {
-      if status.success() {
-        let bin_path =
-          rename_app(&bin_path, product_name.as_deref()).expect("failed to rename app");
-        let mut app = Command::new(bin_path);
-        app.stdout(os_pipe::dup_stdout().unwrap());
-        app.stderr(os_pipe::dup_stderr().unwrap());
-        app.args(run_args);
-        let app_child = Arc::new(SharedChild::spawn(&mut app).unwrap());
-        let app_child_t = app_child.clone();
-        std::thread::spawn(move || {
-          let status = app_child_t.wait().expect("failed to wait on app");
-          on_exit(
-            status,
-            if manually_killed_app_.load(Ordering::Relaxed) {
-              ExitReason::TriggeredKill
-            } else {
-              ExitReason::NormalExit
-            },
-          );
-        });
+//   let build_child = build_dev_app(
+//     options,
+//     available_targets,
+//     config_features,
+//     move |status, reason| {
+//       if status.success() {
+//         let bin_path =
+//           rename_app(&bin_path, product_name.as_deref()).expect("failed to rename app");
+//         let mut app = Command::new(bin_path);
+//         // app.stdout(os_pipe::dup_stdout().unwrap());
+//         // app.stderr(os_pipe::dup_stderr().unwrap());
+//         app.args(run_args);
+//         let app_child = Arc::new(SharedChild::spawn(&mut app).unwrap());
+//         let app_child_t = app_child.clone();
+//         std::thread::spawn(move || {
+//           let status = app_child_t.wait().expect("failed to wait on app");
+//           on_exit(
+//             status,
+//             if manually_killed_app_.load(Ordering::Relaxed) {
+//               ExitReason::TriggeredKill
+//             } else {
+//               ExitReason::NormalExit
+//             },
+//           );
+//         });
 
-        app_child_.lock().unwrap().replace(app_child);
-      } else {
-        on_exit(
-          status,
-          if manually_killed_app_.load(Ordering::Relaxed) {
-            ExitReason::TriggeredKill
-          } else {
-            reason
-          },
-        );
-      }
-    },
-  )?;
+//         app_child_.lock().unwrap().replace(app_child);
+//       } else {
+//         on_exit(
+//           status,
+//           if manually_killed_app_.load(Ordering::Relaxed) {
+//             ExitReason::TriggeredKill
+//           } else {
+//             reason
+//           },
+//         );
+//       }
+//     },
+//   )?;
 
-  Ok(DevChild {
-    manually_killed_app,
-    build_child,
-    app_child,
-  })
-}
+//   Ok(DevChild {
+//     manually_killed_app,
+//     build_child,
+//     app_child,
+//   })
+// }
 
 pub fn build(
   options: Options,
@@ -134,99 +134,99 @@ pub fn build(
   Ok(())
 }
 
-fn build_dev_app<F: FnOnce(ExitStatus, ExitReason) + Send + 'static>(
-  options: Options,
-  available_targets: &mut Option<Vec<Target>>,
-  config_features: Vec<String>,
-  on_exit: F,
-) -> crate::Result<Arc<SharedChild>> {
-  let mut build_cmd = build_command(options, available_targets, config_features)?;
-  let runner = build_cmd.get_program().to_string_lossy().into_owned();
-  build_cmd
-    .env(
-      "CARGO_TERM_PROGRESS_WIDTH",
-      terminal::stderr_width()
-        .map(|width| {
-          if cfg!(windows) {
-            std::cmp::min(60, width)
-          } else {
-            width
-          }
-        })
-        .unwrap_or(if cfg!(windows) { 60 } else { 80 })
-        .to_string(),
-    )
-    .env("CARGO_TERM_PROGRESS_WHEN", "always");
-  build_cmd.arg("--color");
-  build_cmd.arg("always");
+// fn build_dev_app<F: FnOnce(ExitStatus, ExitReason) + Send + 'static>(
+//   options: Options,
+//   available_targets: &mut Option<Vec<Target>>,
+//   config_features: Vec<String>,
+//   on_exit: F,
+// ) -> crate::Result<Arc<SharedChild>> {
+//   let mut build_cmd = build_command(options, available_targets, config_features)?;
+//   let runner = build_cmd.get_program().to_string_lossy().into_owned();
+//   build_cmd
+//     .env(
+//       "CARGO_TERM_PROGRESS_WIDTH",
+//       terminal::stderr_width()
+//         .map(|width| {
+//           if cfg!(windows) {
+//             std::cmp::min(60, width)
+//           } else {
+//             width
+//           }
+//         })
+//         .unwrap_or(if cfg!(windows) { 60 } else { 80 })
+//         .to_string(),
+//     )
+//     .env("CARGO_TERM_PROGRESS_WHEN", "always");
+//   build_cmd.arg("--color");
+//   build_cmd.arg("always");
 
-  build_cmd.stdout(os_pipe::dup_stdout()?);
-  build_cmd.stderr(Stdio::piped());
+//   //build_cmd.stdout(os_pipe::dup_stdout()?);
+//   build_cmd.stderr(Stdio::piped());
 
-  let build_child = match SharedChild::spawn(&mut build_cmd) {
-    Ok(c) => Ok(c),
-    Err(e) if e.kind() == ErrorKind::NotFound => Err(anyhow::anyhow!(
-      "`{}` command not found.{}",
-      runner,
-      if runner == "cargo" {
-        " Please follow the Tauri setup guide: https://tauri.app/v1/guides/getting-started/prerequisites"
-      } else {
-        ""
-      }
-    )),
-    Err(e) => Err(e.into()),
-  }?;
-  let build_child = Arc::new(build_child);
-  let build_child_stderr = build_child.take_stderr().unwrap();
-  let mut stderr = BufReader::new(build_child_stderr);
-  let stderr_lines = Arc::new(Mutex::new(Vec::new()));
-  let stderr_lines_ = stderr_lines.clone();
-  std::thread::spawn(move || {
-    let mut buf = Vec::new();
-    let mut lines = stderr_lines_.lock().unwrap();
-    let mut io_stderr = std::io::stderr();
-    loop {
-      buf.clear();
-      match tauri_utils::io::read_line(&mut stderr, &mut buf) {
-        Ok(s) if s == 0 => break,
-        _ => (),
-      }
-      let _ = io_stderr.write_all(&buf);
-      if !buf.ends_with(&[b'\r']) {
-        let _ = io_stderr.write_all(b"\n");
-      }
-      lines.push(String::from_utf8_lossy(&buf).into_owned());
-    }
-  });
+//   let build_child = match SharedChild::spawn(&mut build_cmd) {
+//     Ok(c) => Ok(c),
+//     Err(e) if e.kind() == ErrorKind::NotFound => Err(anyhow::anyhow!(
+//       "`{}` command not found.{}",
+//       runner,
+//       if runner == "cargo" {
+//         " Please follow the Tauri setup guide: https://tauri.app/v1/guides/getting-started/prerequisites"
+//       } else {
+//         ""
+//       }
+//     )),
+//     Err(e) => Err(e.into()),
+//   }?;
+//   let build_child = Arc::new(build_child);
+//   let build_child_stderr = build_child.take_stderr().unwrap();
+//   let mut stderr = BufReader::new(build_child_stderr);
+//   let stderr_lines = Arc::new(Mutex::new(Vec::new()));
+//   let stderr_lines_ = stderr_lines.clone();
+//   std::thread::spawn(move || {
+//     let mut buf = Vec::new();
+//     let mut lines = stderr_lines_.lock().unwrap();
+//     let mut io_stderr = std::io::stderr();
+//     loop {
+//       buf.clear();
+//       match tauri_utils::io::read_line(&mut stderr, &mut buf) {
+//         Ok(s) if s == 0 => break,
+//         _ => (),
+//       }
+//       let _ = io_stderr.write_all(&buf);
+//       if !buf.ends_with(&[b'\r']) {
+//         let _ = io_stderr.write_all(b"\n");
+//       }
+//       lines.push(String::from_utf8_lossy(&buf).into_owned());
+//     }
+//   });
 
-  let build_child_ = build_child.clone();
-  std::thread::spawn(move || {
-    let status = build_child_.wait().expect("failed to wait on build");
+//   let build_child_ = build_child.clone();
+//   std::thread::spawn(move || {
+//     let status = build_child_.wait().expect("failed to wait on build");
 
-    if status.success() {
-      on_exit(status, ExitReason::NormalExit);
-    } else {
-      let is_cargo_compile_error = stderr_lines
-        .lock()
-        .unwrap()
-        .last()
-        .map(|l| l.contains("could not compile"))
-        .unwrap_or_default();
-      stderr_lines.lock().unwrap().clear();
+//     if status.success() {
+//       on_exit(status, ExitReason::NormalExit);
+//     } else {
+//       let is_cargo_compile_error = stderr_lines
+//         .lock()
+//         .unwrap()
+//         .last()
+//         .map(|l| l.contains("could not compile"))
+//         .unwrap_or_default();
+//       stderr_lines.lock().unwrap().clear();
 
-      on_exit(
-        status,
-        if status.code() == Some(101) && is_cargo_compile_error {
-          ExitReason::CompilationFailed
-        } else {
-          ExitReason::NormalExit
-        },
-      );
-    }
-  });
+//       on_exit(
+//         status,
+//         if status.code() == Some(101) && is_cargo_compile_error {
+//           ExitReason::CompilationFailed
+//         } else {
+//           ExitReason::NormalExit
+//         },
+//       );
+//     }
+//   });
 
-  Ok(build_child)
-}
+//   Ok(build_child)
+// }
 
 fn build_production_app(
   options: Options,

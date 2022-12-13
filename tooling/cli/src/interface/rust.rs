@@ -23,10 +23,10 @@ use anyhow::Context;
 use heck::ToKebabCase;
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use log::{debug, error, info};
-use notify::RecursiveMode;
-use notify_debouncer_mini::new_debouncer;
+// use notify::RecursiveMode;
+// use notify_debouncer_mini::new_debouncer;
 use serde::Deserialize;
-use shared_child::SharedChild;
+// use shared_child::SharedChild;
 use tauri_bundler::{
   AppCategory, BundleBinary, BundleSettings, DebianSettings, MacOsSettings, PackageSettings,
   UpdaterSettings, WindowsSettings,
@@ -70,45 +70,45 @@ impl From<crate::build::Options> for Options {
   }
 }
 
-impl From<crate::dev::Options> for Options {
-  fn from(options: crate::dev::Options) -> Self {
-    Self {
-      runner: options.runner,
-      debug: !options.release_mode,
-      target: options.target,
-      features: options.features,
-      args: options.args,
-      config: options.config,
-      no_watch: options.no_watch,
-    }
-  }
-}
+// impl From<crate::dev::Options> for Options {
+//   fn from(options: crate::dev::Options) -> Self {
+//     Self {
+//       runner: options.runner,
+//       debug: !options.release_mode,
+//       target: options.target,
+//       features: options.features,
+//       args: options.args,
+//       config: options.config,
+//       no_watch: options.no_watch,
+//     }
+//   }
+// }
 
-pub struct DevChild {
-  manually_killed_app: Arc<AtomicBool>,
-  build_child: Arc<SharedChild>,
-  app_child: Arc<Mutex<Option<Arc<SharedChild>>>>,
-}
+// pub struct DevChild {
+//   manually_killed_app: Arc<AtomicBool>,
+//   build_child: Arc<SharedChild>,
+//   app_child: Arc<Mutex<Option<Arc<SharedChild>>>>,
+// }
 
-impl DevChild {
-  fn kill(&self) -> std::io::Result<()> {
-    if let Some(child) = &*self.app_child.lock().unwrap() {
-      child.kill()?;
-    } else {
-      self.build_child.kill()?;
-    }
-    self.manually_killed_app.store(true, Ordering::Relaxed);
-    Ok(())
-  }
+// impl DevChild {
+//   fn kill(&self) -> std::io::Result<()> {
+//     if let Some(child) = &*self.app_child.lock().unwrap() {
+//       child.kill()?;
+//     } else {
+//       self.build_child.kill()?;
+//     }
+//     self.manually_killed_app.store(true, Ordering::Relaxed);
+//     Ok(())
+//   }
 
-  fn try_wait(&self) -> std::io::Result<Option<ExitStatus>> {
-    if let Some(child) = &*self.app_child.lock().unwrap() {
-      child.try_wait()
-    } else {
-      self.build_child.try_wait()
-    }
-  }
-}
+//   fn try_wait(&self) -> std::io::Result<Option<ExitStatus>> {
+//     if let Some(child) = &*self.app_child.lock().unwrap() {
+//       child.try_wait()
+//     } else {
+//       self.build_child.try_wait()
+//     }
+//   }
+// }
 
 #[derive(Debug)]
 pub struct Target {
@@ -128,16 +128,16 @@ impl Interface for Rust {
 
   fn new(config: &Config, target: Option<String>) -> crate::Result<Self> {
     let manifest = {
-      let (tx, rx) = sync_channel(1);
-      let mut watcher = new_debouncer(Duration::from_secs(1), None, move |r| {
-        if let Ok(events) = r {
-          tx.send(events).unwrap()
-        }
-      })
-      .unwrap();
-      watcher
-        .watcher()
-        .watch(&tauri_dir().join("Cargo.toml"), RecursiveMode::Recursive)?;
+      //let (tx, rx) = sync_channel(1);
+      // let mut watcher = new_debouncer(Duration::from_secs(1), None, move |r| {
+      //   if let Ok(events) = r {
+      //     tx.send(events).unwrap()
+      //   }
+      // })
+      // .unwrap();
+      // watcher
+      //   .watcher()
+      //   .watch(&tauri_dir().join("Cargo.toml"), RecursiveMode::Recursive)?;
       let manifest = rewrite_manifest(config)?;
       let now = Instant::now();
       let timeout = Duration::from_secs(2);
@@ -145,9 +145,9 @@ impl Interface for Rust {
         if now.elapsed() >= timeout {
           break;
         }
-        if rx.try_recv().is_ok() {
-          break;
-        }
+        // if rx.try_recv().is_ok() {
+        //   break;
+        // }
       }
       manifest
     };
@@ -183,32 +183,32 @@ impl Interface for Rust {
     Ok(())
   }
 
-  fn dev<F: Fn(ExitStatus, ExitReason) + Send + Sync + 'static>(
-    &mut self,
-    options: Options,
-    on_exit: F,
-  ) -> crate::Result<()> {
-    let on_exit = Arc::new(on_exit);
+  // fn dev<F: Fn(ExitStatus, ExitReason) + Send + Sync + 'static>(
+  //   &mut self,
+  //   options: Options,
+  //   on_exit: F,
+  // ) -> crate::Result<()> {
+  //   let on_exit = Arc::new(on_exit);
 
-    let on_exit_ = on_exit.clone();
+  //   let on_exit_ = on_exit.clone();
 
-    if options.no_watch {
-      let (tx, rx) = sync_channel(1);
-      self.run_dev(options, move |status, reason| {
-        tx.send(()).unwrap();
-        on_exit_(status, reason)
-      })?;
+  //   if options.no_watch {
+  //     let (tx, rx) = sync_channel(1);
+  //     self.run_dev(options, move |status, reason| {
+  //       tx.send(()).unwrap();
+  //       on_exit_(status, reason)
+  //     })?;
 
-      rx.recv().unwrap();
-      Ok(())
-    } else {
-      let child = self.run_dev(options.clone(), move |status, reason| {
-        on_exit_(status, reason)
-      })?;
+  //     rx.recv().unwrap();
+  //     Ok(())
+  //   } else {
+  //     let child = self.run_dev(options.clone(), move |status, reason| {
+  //       on_exit_(status, reason)
+  //     })?;
 
-      self.run_dev_watcher(child, options, on_exit)
-    }
-  }
+  //     self.run_dev_watcher(child, options, on_exit)
+  //   }
+  // }
 
   fn env(&self) -> HashMap<&str, String> {
     let mut env = HashMap::new();
@@ -299,9 +299,9 @@ fn build_ignore_matcher(dir: &Path) -> IgnoreMatcher {
         ignore_builder.add(dir.join(ignore_file));
       }
 
-      for line in crate::dev::TAURI_DEV_WATCHER_GITIGNORE.lines().flatten() {
-        let _ = ignore_builder.add_line(None, &line);
-      }
+      // for line in crate::dev::TAURI_DEV_WATCHER_GITIGNORE.lines().flatten() {
+      //   let _ = ignore_builder.add_line(None, &line);
+      // }
 
       matchers.push(ignore_builder.build().unwrap());
     }
@@ -315,11 +315,11 @@ fn lookup<F: FnMut(FileType, PathBuf)>(dir: &Path, mut f: F) {
   default_gitignore.push(".tauri-dev");
   let _ = std::fs::create_dir_all(&default_gitignore);
   default_gitignore.push(".gitignore");
-  if !default_gitignore.exists() {
-    if let Ok(mut file) = std::fs::File::create(default_gitignore.clone()) {
-      let _ = file.write_all(crate::dev::TAURI_DEV_WATCHER_GITIGNORE);
-    }
-  }
+  // if !default_gitignore.exists() {
+  //   if let Ok(mut file) = std::fs::File::create(default_gitignore.clone()) {
+  //     let _ = file.write_all(crate::dev::TAURI_DEV_WATCHER_GITIGNORE);
+  //   }
+  // }
 
   let mut builder = ignore::WalkBuilder::new(dir);
   builder.add_custom_ignore_filename(".taurignore");
@@ -335,171 +335,171 @@ fn lookup<F: FnMut(FileType, PathBuf)>(dir: &Path, mut f: F) {
 }
 
 impl Rust {
-  fn run_dev<F: Fn(ExitStatus, ExitReason) + Send + Sync + 'static>(
-    &mut self,
-    mut options: Options,
-    on_exit: F,
-  ) -> crate::Result<DevChild> {
-    let mut args = Vec::new();
-    let mut run_args = Vec::new();
-    let mut reached_run_args = false;
-    for arg in options.args.clone() {
-      if reached_run_args {
-        run_args.push(arg);
-      } else if arg == "--" {
-        reached_run_args = true;
-      } else {
-        args.push(arg);
-      }
-    }
+  // fn run_dev<F: Fn(ExitStatus, ExitReason) + Send + Sync + 'static>(
+  //   &mut self,
+  //   mut options: Options,
+  //   on_exit: F,
+  // ) -> crate::Result<DevChild> {
+  //   let mut args = Vec::new();
+  //   let mut run_args = Vec::new();
+  //   let mut reached_run_args = false;
+  //   for arg in options.args.clone() {
+  //     if reached_run_args {
+  //       run_args.push(arg);
+  //     } else if arg == "--" {
+  //       reached_run_args = true;
+  //     } else {
+  //       args.push(arg);
+  //     }
+  //   }
 
-    if !args.contains(&"--no-default-features".into()) {
-      let manifest_features = self.app_settings.manifest.features();
-      let enable_features: Vec<String> = manifest_features
-        .get("default")
-        .cloned()
-        .unwrap_or_default()
-        .into_iter()
-        .filter(|feature| {
-          if let Some(manifest_feature) = manifest_features.get(feature) {
-            !manifest_feature.contains(&"tauri/custom-protocol".into())
-          } else {
-            feature != "tauri/custom-protocol"
-          }
-        })
-        .collect();
-      args.push("--no-default-features".into());
-      if !enable_features.is_empty() {
-        options
-          .features
-          .get_or_insert(Vec::new())
-          .extend(enable_features);
-      }
-    }
+  //   if !args.contains(&"--no-default-features".into()) {
+  //     let manifest_features = self.app_settings.manifest.features();
+  //     let enable_features: Vec<String> = manifest_features
+  //       .get("default")
+  //       .cloned()
+  //       .unwrap_or_default()
+  //       .into_iter()
+  //       .filter(|feature| {
+  //         if let Some(manifest_feature) = manifest_features.get(feature) {
+  //           !manifest_feature.contains(&"tauri/custom-protocol".into())
+  //         } else {
+  //           feature != "tauri/custom-protocol"
+  //         }
+  //       })
+  //       .collect();
+  //     args.push("--no-default-features".into());
+  //     if !enable_features.is_empty() {
+  //       options
+  //         .features
+  //         .get_or_insert(Vec::new())
+  //         .extend(enable_features);
+  //     }
+  //   }
 
-    options.args = args;
+  //   options.args = args;
 
-    desktop::run_dev(
-      options,
-      run_args,
-      &mut self.available_targets,
-      self.config_features.clone(),
-      &self.app_settings,
-      self.product_name.clone(),
-      on_exit,
-    )
-  }
+  //   desktop::run_dev(
+  //     options,
+  //     run_args,
+  //     &mut self.available_targets,
+  //     self.config_features.clone(),
+  //     &self.app_settings,
+  //     self.product_name.clone(),
+  //     on_exit,
+  //   )
+  // }
 
-  fn run_dev_watcher<F: Fn(ExitStatus, ExitReason) + Send + Sync + 'static>(
-    &mut self,
-    child: DevChild,
-    options: Options,
-    on_exit: Arc<F>,
-  ) -> crate::Result<()> {
-    let process = Arc::new(Mutex::new(child));
-    let (tx, rx) = sync_channel(1);
-    let app_path = app_dir();
-    let tauri_path = tauri_dir();
-    let workspace_path = get_workspace_dir()?;
+  // fn run_dev_watcher<F: Fn(ExitStatus, ExitReason) + Send + Sync + 'static>(
+  //   &mut self,
+  //   child: DevChild,
+  //   options: Options,
+  //   on_exit: Arc<F>,
+  // ) -> crate::Result<()> {
+  //   let process = Arc::new(Mutex::new(child));
+  //   let (tx, rx) = sync_channel(1);
+  //   let app_path = app_dir();
+  //   let tauri_path = tauri_dir();
+  //   let workspace_path = get_workspace_dir()?;
 
-    let watch_folders = if tauri_path == workspace_path {
-      vec![tauri_path]
-    } else {
-      let cargo_settings = CargoSettings::load(&workspace_path)?;
-      cargo_settings
-        .workspace
-        .as_ref()
-        .map(|w| {
-          w.members
-            .clone()
-            .unwrap_or_default()
-            .into_iter()
-            .map(|p| workspace_path.join(p))
-            .collect()
-        })
-        .unwrap_or_else(|| vec![tauri_path])
-    };
+  //   let watch_folders = if tauri_path == workspace_path {
+  //     vec![tauri_path]
+  //   } else {
+  //     let cargo_settings = CargoSettings::load(&workspace_path)?;
+  //     cargo_settings
+  //       .workspace
+  //       .as_ref()
+  //       .map(|w| {
+  //         w.members
+  //           .clone()
+  //           .unwrap_or_default()
+  //           .into_iter()
+  //           .map(|p| workspace_path.join(p))
+  //           .collect()
+  //       })
+  //       .unwrap_or_else(|| vec![tauri_path])
+  //   };
 
-    let watch_folders = watch_folders.iter().map(Path::new).collect::<Vec<_>>();
-    let common_ancestor = common_path::common_path_all(watch_folders.clone()).unwrap();
-    let ignore_matcher = build_ignore_matcher(&common_ancestor);
+  //   let watch_folders = watch_folders.iter().map(Path::new).collect::<Vec<_>>();
+  //   let common_ancestor = common_path::common_path_all(watch_folders.clone()).unwrap();
+  //   let ignore_matcher = build_ignore_matcher(&common_ancestor);
 
-    let mut watcher = new_debouncer(Duration::from_secs(1), None, move |r| {
-      if let Ok(events) = r {
-        tx.send(events).unwrap()
-      }
-    })
-    .unwrap();
-    for path in watch_folders {
-      if !ignore_matcher.is_ignore(path, true) {
-        info!("Watching {} for changes...", path.display());
-        lookup(path, |file_type, p| {
-          if p != path {
-            debug!("Watching {} for changes...", p.display());
-            let _ = watcher.watcher().watch(
-              &p,
-              if file_type.is_dir() {
-                RecursiveMode::Recursive
-              } else {
-                RecursiveMode::NonRecursive
-              },
-            );
-          }
-        });
-      }
-    }
+  //   // let mut watcher = new_debouncer(Duration::from_secs(1), None, move |r| {
+  //   //   if let Ok(events) = r {
+  //   //     tx.send(events).unwrap()
+  //   //   }
+  //   // })
+  //   // .unwrap();
+  //   // for path in watch_folders {
+  //   //   if !ignore_matcher.is_ignore(path, true) {
+  //   //     info!("Watching {} for changes...", path.display());
+  //   //     lookup(path, |file_type, p| {
+  //   //       if p != path {
+  //   //         debug!("Watching {} for changes...", p.display());
+  //   //         let _ = watcher.watcher().watch(
+  //   //           &p,
+  //   //           if file_type.is_dir() {
+  //   //             RecursiveMode::Recursive
+  //   //           } else {
+  //   //             RecursiveMode::NonRecursive
+  //   //           },
+  //   //         );
+  //   //       }
+  //   //     });
+  //   //   }
+  //   // }
 
-    loop {
-      if let Ok(events) = rx.recv() {
-        for event in events {
-          let on_exit = on_exit.clone();
-          let event_path = event.path;
+  //   loop {
+  //     if let Ok(events) = rx.recv() {
+  //       for event in events {
+  //         let on_exit = on_exit.clone();
+  //         let event_path = event.path;
 
-          if !ignore_matcher.is_ignore(&event_path, event_path.is_dir()) {
-            if is_configuration_file(&event_path) {
-              match reload_config(options.config.as_deref()) {
-                Ok(config) => {
-                  info!("Tauri configuration changed. Rewriting manifest...");
-                  self.app_settings.manifest =
-                    rewrite_manifest(config.lock().unwrap().as_ref().unwrap())?
-                }
-                Err(err) => {
-                  let p = process.lock().unwrap();
-                  let is_building_app = p.app_child.lock().unwrap().is_none();
-                  if is_building_app {
-                    p.kill().with_context(|| "failed to kill app process")?;
-                  }
-                  error!("{}", err);
-                }
-              }
-            } else {
-              info!(
-                "File {} changed. Rebuilding application...",
-                event_path
-                  .strip_prefix(app_path)
-                  .unwrap_or(&event_path)
-                  .display()
-              );
-              // When tauri.conf.json is changed, rewrite_manifest will be called
-              // which will trigger the watcher again
-              // So the app should only be started when a file other than tauri.conf.json is changed
-              let mut p = process.lock().unwrap();
-              p.kill().with_context(|| "failed to kill app process")?;
-              // wait for the process to exit
-              loop {
-                if let Ok(Some(_)) = p.try_wait() {
-                  break;
-                }
-              }
-              *p = self.run_dev(options.clone(), move |status, reason| {
-                on_exit(status, reason)
-              })?;
-            }
-          }
-        }
-      }
-    }
-  }
+  //         if !ignore_matcher.is_ignore(&event_path, event_path.is_dir()) {
+  //           if is_configuration_file(&event_path) {
+  //             match reload_config(options.config.as_deref()) {
+  //               Ok(config) => {
+  //                 info!("Tauri configuration changed. Rewriting manifest...");
+  //                 self.app_settings.manifest =
+  //                   rewrite_manifest(config.lock().unwrap().as_ref().unwrap())?
+  //               }
+  //               Err(err) => {
+  //                 let p = process.lock().unwrap();
+  //                 let is_building_app = p.app_child.lock().unwrap().is_none();
+  //                 if is_building_app {
+  //                   p.kill().with_context(|| "failed to kill app process")?;
+  //                 }
+  //                 error!("{}", err);
+  //               }
+  //             }
+  //           } else {
+  //             info!(
+  //               "File {} changed. Rebuilding application...",
+  //               event_path
+  //                 .strip_prefix(app_path)
+  //                 .unwrap_or(&event_path)
+  //                 .display()
+  //             );
+  //             // When tauri.conf.json is changed, rewrite_manifest will be called
+  //             // which will trigger the watcher again
+  //             // So the app should only be started when a file other than tauri.conf.json is changed
+  //             let mut p = process.lock().unwrap();
+  //             p.kill().with_context(|| "failed to kill app process")?;
+  //             // wait for the process to exit
+  //             loop {
+  //               if let Ok(Some(_)) = p.try_wait() {
+  //                 break;
+  //               }
+  //             }
+  //             *p = self.run_dev(options.clone(), move |status, reason| {
+  //               on_exit(status, reason)
+  //             })?;
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 }
 
 /// The `workspace` section of the app configuration (read from Cargo.toml).

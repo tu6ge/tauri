@@ -80,9 +80,9 @@ pub trait Interface: Sized {
   fn app_settings(&self) -> &Self::AppSettings;
   fn env(&self) -> HashMap<&str, String>;
   fn build(&mut self, options: Options) -> crate::Result<()>;
-  fn dev<F: Fn(ExitStatus, ExitReason) + Send + Sync + 'static>(
-    &mut self,
-    options: Options,
-    on_exit: F,
-  ) -> crate::Result<()>;
+  // fn dev<F: Fn(ExitStatus, ExitReason) + Send + Sync + 'static>(
+  //   &mut self,
+  //   options: Options,
+  //   on_exit: F,
+  // ) -> crate::Result<()>;
 }

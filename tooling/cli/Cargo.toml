@@ -46,17 +46,17 @@ colored = "2.0"
 once_cell = "1"
 serde = { version = "1.0", features = [ "derive" ] }
 serde_json = "1.0"
-notify = "5.0"
-notify-debouncer-mini = "0.2"
-shared_child = "1.0"
+#notify = "5.0"
+#notify-debouncer-mini = "0.2"
+#shared_child = "1.0"
 toml_edit = "0.14"
 json-patch = "0.2"
-tauri-utils = { version = "1.2.1", path = "../../core/tauri-utils", features = [ "isolation", "schema", "config-json5", "config-toml" ] }
+tauri-utils = { version = "1.2.1", path = "../../core/tauri-utils", features = [ "isolation", "schema", "config-json5", "config-toml", "wasm" ] }
 toml = "0.5"
-jsonschema = "0.16"
+jsonschema = {version = "0.16", git="https://github.com/tu6ge/jsonschema-rs", branch="master", default-features = false, features = ["resolve-file", "tauri"]}
 handlebars = "4.3"
 include_dir = "0.7"
-minisign = "0.7"
+minisign = "0.7.2"
 base64 = "0.13.0"
 ureq = "2.5"
 os_info = "3.5"
@@ -67,17 +67,17 @@ zeroize = "1.5"
 heck = "0.4"
 dialoguer = "0.10"
 url = { version = "2.3", features = [ "serde" ] }
-os_pipe = "1"
+# os_pipe = "1"
 ignore = "0.4"
-ctrlc = "3.2"
+#ctrlc = "3.2"
 log = { version = "0.4.17", features = [ "kv_unstable", "kv_unstable_std" ] }
 env_logger = "0.9.1"
 icns = { package = "tauri-icns", version = "0.1" }
 image = { version = "0.24", default-features = false, features = [ "ico" ] }
-axum = { version = "0.5.16", features = [ "ws" ] }
+#axum = { version = "0.5.16", features = [ "ws" ] }
 html5ever = "0.25"
 kuchiki = "0.8"
-tokio = { version = "1", features = [ "macros", "sync" ] }
+#tokio = { version = "1", features = [ "macros", "sync" ] }
 common-path = "1"
 
 [target."cfg(windows)".dependencies]

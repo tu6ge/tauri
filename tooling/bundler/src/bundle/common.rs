@@ -51,6 +51,13 @@ fn symlink_dir(src: &Path, dst: &Path) -> io::Result<()> {
   std::os::windows::fs::symlink_dir(src, dst)
 }
 
+/// Makes a symbolic link to a directory.
+#[cfg(target_arch = "wasm32")]
+fn symlink_dir(src: &Path, dst: &Path) -> io::Result<()> {
+  //std::os::windows::fs::symlink_dir(src, dst)
+  Ok(())
+}
+
 /// Makes a symbolic link to a file.
 #[cfg(unix)]
 #[allow(dead_code)]
@@ -62,6 +69,13 @@ fn symlink_file(src: &Path, dst: &Path) -> io::Result<()> {
 #[cfg(windows)]
 fn symlink_file(src: &Path, dst: &Path) -> io::Result<()> {
   std::os::windows::fs::symlink_file(src, dst)
+}
+
+/// Makes a symbolic link to a file.
+#[cfg(target_arch = "wasm32")]
+fn symlink_file(src: &Path, dst: &Path) -> io::Result<()> {
+  //std::os::fs::symlink_file(src, dst)
+  Ok(())
 }
 
 /// Copies a regular file from one path to another, creating any parent

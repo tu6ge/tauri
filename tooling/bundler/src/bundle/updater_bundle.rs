@@ -178,6 +178,12 @@ fn bundle_update(settings: &Settings, bundles: &[Bundle]) -> crate::Result<Vec<P
   Ok(msi_archived_paths)
 }
 
+#[cfg(target_arch = "wasm32")]
+fn bundle_update(settings: &Settings, bundles: &[Bundle]) -> crate::Result<Vec<PathBuf>> {
+  // TODO
+  Ok(Vec::new())
+}
+
 #[cfg(target_os = "windows")]
 pub fn create_zip(src_file: &Path, dst_file: &Path) -> crate::Result<PathBuf> {
   let parent_dir = dst_file.parent().expect("No data in parent");

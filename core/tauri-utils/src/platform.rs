@@ -8,6 +8,7 @@ use std::path::{PathBuf, MAIN_SEPARATOR};
 
 use crate::{Env, PackageInfo};
 
+#[cfg(not(feature = "wasm"))]
 mod starting_binary;
 
 /// Retrieves the currently running binary's path, taking into account security considerations.
@@ -82,8 +83,15 @@ mod starting_binary;
 ///
 /// [Hard Link]: https://en.wikipedia.org/wiki/Hard_link
 /// [See the patch that enabled this]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=800179c9b8a1e796e441674776d11cd4c05d61d7
+#[cfg(not(feature = "wasm"))]
 pub fn current_exe() -> std::io::Result<PathBuf> {
   self::starting_binary::STARTING_BINARY.cloned()
+}
+
+/// Retrieves the currently running binary's path, taking into account security considerations.
+#[cfg(feature = "wasm")]
+pub fn current_exe() -> std::io::Result<PathBuf> {
+  std::env::current_exe()
 }
 
 /// Try to determine the current target triple.

@@ -5,7 +5,7 @@
 pub use anyhow::Result;
 
 mod build;
-mod dev;
+//mod dev;
 mod helpers;
 mod icon;
 mod info;
@@ -62,7 +62,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
   Build(build::Options),
-  Dev(dev::Options),
+  //Dev(dev::Options),
   Icon(icon::Options),
   Info(info::Options),
   Init(init::Options),
@@ -161,7 +161,7 @@ where
 
   match cli.command {
     Commands::Build(options) => build::command(options)?,
-    Commands::Dev(options) => dev::command(options)?,
+    //Commands::Dev(options) => dev::command(options)?,
     Commands::Icon(options) => icon::command(options)?,
     Commands::Info(options) => info::command(options)?,
     Commands::Init(options) => init::command(options)?,
@@ -201,8 +201,8 @@ pub trait CommandExt {
 
 impl CommandExt for Command {
   fn piped(&mut self) -> std::io::Result<ExitStatus> {
-    self.stdout(os_pipe::dup_stdout()?);
-    self.stderr(os_pipe::dup_stderr()?);
+    // self.stdout(os_pipe::dup_stdout()?);
+    // self.stderr(os_pipe::dup_stderr()?);
     let program = self.get_program().to_string_lossy().into_owned();
     debug!(action = "Running"; "Command `{} {}`", program, self.get_args().map(|arg| arg.to_string_lossy()).fold(String::new(), |acc, arg| format!("{} {}", acc, arg)));
 

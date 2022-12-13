@@ -7,8 +7,8 @@ use axum::{
 };
 use html5ever::{namespace_url, ns, LocalName, QualName};
 use kuchiki::{traits::TendrilSink, NodeRef};
-use notify::RecursiveMode;
-use notify_debouncer_mini::new_debouncer;
+// use notify::RecursiveMode;
+// use notify_debouncer_mini::new_debouncer;
 use std::{
   net::SocketAddr,
   path::{Path, PathBuf},
@@ -41,26 +41,26 @@ pub fn start_dev_server<P: AsRef<Path>>(path: P) {
 
         let tokio_tx = tx.clone();
         let serve_dir_ = serve_dir.clone();
-        thread::spawn(move || {
-          let (tx, rx) = sync_channel(1);
-          let mut watcher = new_debouncer(Duration::from_secs(1), None, move |r| {
-            if let Ok(events) = r {
-              tx.send(events).unwrap()
-            }
-          })
-          .unwrap();
+        // thread::spawn(move || {
+        //   let (tx, rx) = sync_channel(1);
+        //   let mut watcher = new_debouncer(Duration::from_secs(1), None, move |r| {
+        //     if let Ok(events) = r {
+        //       tx.send(events).unwrap()
+        //     }
+        //   })
+        //   .unwrap();
 
-          watcher
-            .watcher()
-            .watch(&serve_dir_, RecursiveMode::Recursive)
-            .unwrap();
+        //   watcher
+        //     .watcher()
+        //     .watch(&serve_dir_, RecursiveMode::Recursive)
+        //     .unwrap();
 
-          loop {
-            if rx.recv().is_ok() {
-              let _ = tokio_tx.send(());
-            }
-          }
-        });
+        //   loop {
+        //     if rx.recv().is_ok() {
+        //       let _ = tokio_tx.send(());
+        //     }
+        //   }
+        // });
 
         let state = Arc::new(State { serve_dir, tx });
         let router = Router::new()
