@@ -32,7 +32,7 @@ pub struct Options {
   tauri: bool,
   /// Set target directory for init
   #[clap(short, long)]
-  #[clap(default_value_t = current_dir().expect("failed to read cwd").display().to_string())]
+  //#[clap(default_value_t = current_dir().expect("failed to read cwd").display().to_string())]
   directory: String,
   /// Path of the Tauri project to use (relative to the cwd)
   #[clap(short, long)]

@@ -94,6 +94,15 @@ where
 {
   if let Err(e) = try_run(args, bin_name) {
     log::error!("{:#}", e);
+
+    #[cfg(target_arch = "wasm32")]
+    {
+      use web_sys::console;
+      use wasm_bindgen::prelude::*;
+      let res: JsValue = format!("try_run err: {:#}", e).into();
+      console::log_1(&res);
+    }
+    
     exit(1);
   }
 }
@@ -155,6 +164,7 @@ where
     })
     .try_init();
 
+    
   if let Err(err) = init_res {
     eprintln!("Failed to attach logger: {}", err);
   }

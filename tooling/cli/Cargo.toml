@@ -79,12 +79,18 @@ html5ever = "0.25"
 kuchiki = "0.8"
 #tokio = { version = "1", features = [ "macros", "sync" ] }
 common-path = "1"
+# wasm target
+
 
 [target."cfg(windows)".dependencies]
 winapi = { version = "0.3", features = [ "handleapi", "processenv", "winbase", "wincon", "winnt" ] }
 
 [target."cfg(unix)".dependencies]
 libc = "0.2"
+
+[target."cfg(target_arch = \"wasm32\")".dependencies]
+web-sys = {version = "0.3.60", features = ["console"]}
+wasm-bindgen = "0.2.83"
 
 [profile.release]
 lto = true
