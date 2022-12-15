@@ -51,7 +51,7 @@ serde_json = "1.0"
 #shared_child = "1.0"
 toml_edit = "0.14"
 json-patch = "0.2"
-tauri-utils = { version = "1.2.1", path = "../../core/tauri-utils", features = [ "isolation", "schema", "config-json5", "config-toml", "wasm" ] }
+tauri-utils = { version = "1.2.1", path = "../../core/tauri-utils", features = [ "isolation", "schema", "config-json5", "config-toml"] }
 toml = "0.5"
 jsonschema = {version = "0.16", git="https://github.com/tu6ge/jsonschema-rs", branch="master", default-features = false, features = ["resolve-file", "tauri"]}
 handlebars = "4.3"
